@@ -37,12 +37,7 @@ body{background:var(--base);color:var(--ink);font-family:var(--sans);font-size:1
 
 /* ── NAV ─────────────────────────────────────────────────────────── */
 nav{position:sticky;top:0;z-index:200;background:rgba(247,245,240,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 60px;height:58px;display:flex;align-items:center;justify-content:space-between;}
-.nav-logo{font-family:var(--serif);font-size:17px;color:var(--ink);display:flex;align-items:center;gap:12px;text-decoration:none;}
-.nav-logo-img{height:40px;width:auto;object-fit:contain;border-radius:6px;padding:3px;background:var(--surface);box-shadow:0 1px 6px rgba(26,23,20,.12),0 0 0 1px var(--border);transition:box-shadow .2s,transform .2s;}
-.nav-logo:hover .nav-logo-img{box-shadow:0 4px 16px rgba(200,101,10,.22),0 0 0 1.5px var(--accent);transform:translateY(-1px);}
-.nav-logo-wordmark{display:flex;flex-direction:column;line-height:1.1;}
-.nav-logo-wordmark-top{font-family:var(--serif);font-size:15px;font-weight:400;color:var(--ink);letter-spacing:.01em;}
-.nav-logo-wordmark-sub{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
+.nav-logo{font-family:var(--serif);font-size:17px;color:var(--ink);display:flex;align-items:center;gap:9px;text-decoration:none;}
 .nav-logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
 .nav-right{display:flex;align-items:center;gap:28px;}
 .nav-link{font-size:13px;font-weight:500;color:var(--ink-mid);text-decoration:none;transition:color .15s;}
@@ -95,6 +90,86 @@ h1 em{font-style:italic;color:var(--accent);}
 .btn-calc:hover:not(:disabled){background:var(--accent-hi);transform:translateY(-1px);}
 .btn-calc:disabled{opacity:.4;cursor:not-allowed;transform:none;}
 
+/* ── SETTING TOGGLE ──────────────────────────────────────────────── */
+.setting-pill{
+  display:inline-flex;align-items:center;gap:0;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:40px;
+  padding:5px 6px 5px 14px;
+  cursor:pointer;
+  transition:border-color .25s, box-shadow .25s, background .25s;
+  box-shadow:0 1px 4px rgba(26,23,20,.06);
+  user-select:none;
+}
+.setting-pill:hover{
+  border-color:var(--accent);
+  box-shadow:0 2px 12px rgba(200,101,10,.15);
+}
+.setting-pill.active{
+  background:linear-gradient(135deg,#fff8f2 0%,#fceee2 100%);
+  border-color:var(--accent);
+  box-shadow:0 2px 14px rgba(200,101,10,.18);
+}
+.pill-label{
+  display:flex;flex-direction:column;gap:1px;margin-right:10px;
+}
+.pill-title{
+  font-size:12px;font-weight:700;color:var(--ink);letter-spacing:.01em;white-space:nowrap;
+  transition:color .2s;
+}
+.setting-pill.active .pill-title{color:var(--accent);}
+.pill-mode{
+  font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-soft);transition:color .2s;
+}
+.setting-pill.active .pill-mode{color:var(--accent-hi);}
+
+/* The switch itself */
+.pill-switch{
+  position:relative;width:46px;height:26px;flex-shrink:0;
+}
+.pill-switch input{opacity:0;width:0;height:0;position:absolute;}
+.pill-track{
+  position:absolute;inset:0;
+  background:var(--border);
+  border-radius:26px;
+  transition:background .3s;
+  border:1.5px solid rgba(0,0,0,.06);
+}
+.pill-switch input:checked ~ .pill-track{
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent-hi) 100%);
+  border-color:transparent;
+}
+.pill-knob{
+  position:absolute;
+  top:3px;left:3px;
+  width:18px;height:18px;
+  background:#fff;
+  border-radius:50%;
+  box-shadow:0 1px 5px rgba(0,0,0,.22),0 0 0 1px rgba(0,0,0,.04);
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;
+}
+.pill-switch input:checked ~ .pill-knob{
+  transform:translateX(20px);
+  box-shadow:0 2px 8px rgba(200,101,10,.35),0 0 0 1px rgba(0,0,0,.04);
+}
+/* icon inside knob */
+.pill-knob::after{
+  content:'✕';
+  color:var(--border);
+  font-size:8px;font-weight:900;
+  transition:content .2s,color .2s,opacity .2s;
+  opacity:.7;
+}
+.pill-switch input:checked ~ .pill-knob::after{
+  content:'✓';
+  color:var(--accent);
+  opacity:1;
+}
+
 /* ── RESULTS ─────────────────────────────────────────────────────── */
 #results{display:none;padding:0 60px 80px;}
 #results.on{display:block;}
@@ -123,21 +198,6 @@ h1 em{font-style:italic;color:var(--accent);}
 
 /* ── FILTER BAR ──────────────────────────────────────────────────── */
 .filter-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
-.month-picker{position:relative;}
-.month-picker-btn{background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:8px 13px;font-family:var(--sans);font-size:13px;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;transition:border-color .15s;}
-.month-picker-btn:hover,.month-picker-btn.open{border-color:var(--accent);}
-.mp-arrow{font-size:10px;color:var(--ink-soft);transition:transform .15s;}
-.month-picker-btn.open .mp-arrow{transform:rotate(180deg);}
-.month-picker-drop{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:3px;box-shadow:var(--shadow-lg);min-width:170px;padding:8px 0;}
-.month-picker-drop.open{display:block;}
-.mp-actions{display:flex;gap:6px;padding:4px 10px 8px;border-bottom:1px solid var(--border);margin-bottom:4px;}
-.mp-actions button{background:none;border:1px solid var(--border);border-radius:2px;font-family:var(--sans);font-size:11px;font-weight:600;color:var(--ink-mid);padding:3px 9px;cursor:pointer;transition:border-color .15s,color .15s;}
-.mp-actions button:hover{border-color:var(--accent);color:var(--accent);}
-.mp-list{max-height:220px;overflow-y:auto;}
-.mp-item{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:13px;color:var(--ink);transition:background .12s;}
-.mp-item:hover{background:var(--accent-lo);}
-.mp-item input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;cursor:pointer;}
-.mp-badge{margin-left:auto;font-size:10px;font-weight:700;background:var(--accent-lo);color:var(--accent);padding:1px 6px;border-radius:2px;}
 .f-input{background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:8px 13px;font-family:var(--sans);font-size:13px;color:var(--ink);outline:none;transition:border-color .15s;min-width:200px;}
 .f-input::placeholder{color:var(--ink-soft);opacity:.6;}
 .f-input:focus{border-color:var(--accent);}
@@ -183,36 +243,9 @@ tfoot td{background:var(--base);font-weight:700;font-size:12px;color:var(--ink);
 .toast.ok{border-left-color:var(--green);}
 @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── INSTRUCTIONS ────────────────────────────────────────────────── */
-.instructions{padding:56px 60px;border-bottom:1px solid var(--border);background:var(--surface);}
-.instr-eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
-.instr-title{font-family:var(--serif);font-size:28px;color:var(--ink);letter-spacing:-.01em;margin-bottom:8px;}
-.instr-sub{font-size:14px;color:var(--ink-mid);margin-bottom:36px;max-width:560px;line-height:1.7;}
-.instr-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:40px;}
-.instr-step{background:var(--base);border:1px solid var(--border);border-radius:4px;padding:22px 20px;position:relative;transition:border-color .2s,box-shadow .2s;}
-.instr-step:hover{border-color:var(--accent);box-shadow:0 4px 18px rgba(200,101,10,.10);}
-.instr-step-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
-.instr-step-icon{font-size:26px;margin-bottom:10px;display:block;}
-.instr-step-title{font-weight:700;font-size:13px;color:var(--ink);margin-bottom:6px;letter-spacing:.01em;}
-.instr-step-body{font-size:12px;color:var(--ink-mid);line-height:1.7;}
-.instr-step-body b{color:var(--ink);font-weight:600;}
-.instr-connector{display:flex;align-items:flex-start;padding-top:14px;gap:6px;color:var(--ink-soft);font-size:18px;pointer-events:none;justify-content:center;}
-.instr-rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px;}
-.instr-rule{background:var(--base);border:1px solid var(--border);border-radius:4px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;}
-.instr-rule-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
-.instr-rule-text{font-size:12px;color:var(--ink-mid);line-height:1.65;}
-.instr-rule-text b{color:var(--ink);font-weight:600;display:block;margin-bottom:2px;}
-.instr-note{background:var(--accent-lo);border:1px solid rgba(200,101,10,.2);border-radius:4px;padding:14px 18px;font-size:12px;color:var(--ink-mid);line-height:1.7;display:flex;gap:10px;align-items:flex-start;}
-.instr-note-icon{font-size:16px;flex-shrink:0;}
-@media(max-width:900px){
-  .instructions{padding:40px 24px;}
-  .instr-steps{grid-template-columns:repeat(2,1fr);}
-  .instr-rules{grid-template-columns:1fr;}
-}
-
 /* ── FOOTER ──────────────────────────────────────────────────────── */
 footer{border-top:1px solid var(--border);padding:22px 60px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink-soft);background:var(--surface);}
-.footer-brand{font-family:var(--serif);font-size:15px;color:var(--ink);display:flex;align-items:center;gap:10px;}
+.footer-brand{font-family:var(--serif);font-size:15px;color:var(--ink);}
 
 /* ── RESPONSIVE ──────────────────────────────────────────────────── */
 @media(max-width:900px){
@@ -231,7 +264,7 @@ footer{border-top:1px solid var(--border);padding:22px 60px;display:flex;justify
 
 <!-- NAV -->
 <nav>
-  <a href="https://threedis.com" target="_blank" class="nav-logo"><img src="data:image/jpeg;base64,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" alt="Three D Integrated Solutions" class="nav-logo-img"/><span class="nav-logo-wordmark"><span class="nav-logo-wordmark-top">Three D</span><span class="nav-logo-wordmark-sub">Integrated Solutions</span></span></a>
+  <a href="#" class="nav-logo"><span class="nav-logo-dot"></span>BonusCalc</a>
   <div class="nav-right">
     <a href="#results" class="nav-link">Register</a>
     <button class="nav-btn" onclick="document.getElementById('file-input').click()">Upload Files</button>
@@ -290,73 +323,6 @@ footer{border-top:1px solid var(--border);padding:22px 60px;display:flex;justify
   </div>
 </section>
 
-<!-- INSTRUCTIONS -->
-<section class="instructions">
-  <p class="instr-eyebrow">How it works</p>
-  <h2 class="instr-title">Four steps to your Bonus Register</h2>
-  <p class="instr-sub">Follow these steps to calculate statutory bonus for your employees under the Payment of Bonus Act, 1965. The tool handles eligibility, minimum wages, and LOP pro-ration automatically.</p>
-
-  <div class="instr-steps">
-    <div class="instr-step">
-      <div class="instr-step-num">1</div>
-      <span class="instr-step-icon">📋</span>
-      <div class="instr-step-title">Prepare Your Salary Register</div>
-      <div class="instr-step-body">Ensure your Excel file has these columns:<br/><b>Emp ID · Employee Name · Designation · Basic (Th) · VDA (Th) · Sal Cal Days · Pay Days · Location · Month/Year</b></div>
-    </div>
-    <div class="instr-step">
-      <div class="instr-step-num">2</div>
-      <span class="instr-step-icon">📤</span>
-      <div class="instr-step-title">Upload Monthly Files</div>
-      <div class="instr-step-body">Upload <b>one file per month</b> (Apr–Mar financial year). You can upload all 12 months at once. Files must be in <b>.xlsx</b> format. Drag & drop or click to browse.</div>
-    </div>
-    <div class="instr-step">
-      <div class="instr-step-num">3</div>
-      <span class="instr-step-icon">⚡</span>
-      <div class="instr-step-title">Calculate</div>
-      <div class="instr-step-body">Click <b>Calculate Bonus Register</b>. The tool auto-detects each employee's <b>Area (A/B/C)</b>, <b>Skill level</b>, and applicable <b>Construction MW rate</b>. Bonus is computed at <b>8.33%</b> of prorated MW.</div>
-    </div>
-    <div class="instr-step">
-      <div class="instr-step-num">4</div>
-      <span class="instr-step-icon">⬇</span>
-      <div class="instr-step-title">Review &amp; Download</div>
-      <div class="instr-step-body">Filter by month, area, or eligibility. Use the <b>month picker</b> to view specific periods. Click <b>Download Excel</b> to export a compliance-ready bonus register.</div>
-    </div>
-  </div>
-
-  <p style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;">Key Rules Applied Automatically</p>
-  <div class="instr-rules">
-    <div class="instr-rule">
-      <span class="instr-rule-icon">✅</span>
-      <div class="instr-rule-text"><b>Eligibility Check</b>Basic (Th) + VDA (Th) must be &gt; ₹0 and &lt; <b>₹21,000/month</b> to qualify for bonus under the Act.</div>
-    </div>
-    <div class="instr-rule">
-      <span class="instr-rule-icon">📍</span>
-      <div class="instr-rule-text"><b>Area Classification</b>Employee's location is auto-mapped to <b>Area A, B, or C</b> as per CLC city schedule, determining the applicable minimum wage rate.</div>
-    </div>
-    <div class="instr-rule">
-      <span class="instr-rule-icon">🔧</span>
-      <div class="instr-rule-text"><b>Skill Mapping</b>Designation is mapped to <b>Unskilled / Semi-Skilled / Skilled / Highly Skilled</b> using the Construction &amp; Maintenance schedule (CLC).</div>
-    </div>
-    <div class="instr-rule">
-      <span class="instr-rule-icon">📅</span>
-      <div class="instr-rule-text"><b>Period-wise MW</b>Minimum wages are picked from the correct <b>6-month CLC period</b> (Apr–Sep or Oct–Mar) based on the month of the salary register.</div>
-    </div>
-    <div class="instr-rule">
-      <span class="instr-rule-icon">📐</span>
-      <div class="instr-rule-text"><b>LOP Pro-ration</b>Minimum wages are prorated: <b>MW ÷ Sal Cal Days × Pay Days</b>, then floored (ROUNDDOWN). Accounts for Loss of Pay days automatically.</div>
-    </div>
-    <div class="instr-rule">
-      <span class="instr-rule-icon">💰</span>
-      <div class="instr-rule-text"><b>Bonus Calculation</b><b>Bonus = FLOOR(Prorated MW × 8.33%)</b>. Applied only to eligible employees. Ineligible employees show — in the bonus column.</div>
-    </div>
-  </div>
-
-  <div class="instr-note">
-    <span class="instr-note-icon">ℹ️</span>
-    <span><b>File format tip:</b> The tool auto-detects the correct sheet and header row. Month/Year can be in the filename (e.g. <b>April_2024.xlsx</b>) or in a dedicated column. Rows with item counts (e.g. <em>Feb/Item:06</em>) and month-header rows are automatically skipped.</span>
-  </div>
-</section>
-
 <!-- RESULTS -->
 <section id="results">
   <div class="result-rule"></div>
@@ -366,6 +332,17 @@ footer{border-top:1px solid var(--border);padding:22px 60px;display:flex;justify
       <div class="result-meta" id="result-meta">—</div>
     </div>
     <div class="result-actions">
+      <label class="setting-pill" id="setting-row" for="toggle-above21k">
+        <div class="pill-label">
+          <span class="pill-title">Bonus above ₹21,000</span>
+          <span class="pill-mode" id="setting-desc">Statutory Mode</span>
+        </div>
+        <div class="pill-switch">
+          <input type="checkbox" id="toggle-above21k" onchange="reCalcWithSetting()"/>
+          <div class="pill-track"></div>
+          <div class="pill-knob"></div>
+        </div>
+      </label>
       <button class="btn-dl" onclick="downloadExcel()">⬇ Download Excel</button>
       <button class="btn-reset" onclick="resetAll()">↺ New Calculation</button>
     </div>
@@ -391,18 +368,9 @@ footer{border-top:1px solid var(--border);padding:22px 60px;display:flex;justify
       <option value="B">Area B</option>
       <option value="C">Area C</option>
     </select>
-    <div class="month-picker" id="month-picker">
-      <button class="month-picker-btn" id="month-picker-btn" onclick="toggleMonthPicker(event)">
-        <span id="mp-label">All Months </span><span class="mp-arrow">&#9660;</span>
-      </button>
-      <div class="month-picker-drop" id="month-picker-drop">
-        <div class="mp-actions">
-          <button onclick="selectAllMonths()">All</button>
-          <button onclick="clearAllMonths()">None</button>
-        </div>
-        <div class="mp-list" id="mp-list"></div>
-      </div>
-    </div>
+    <select class="f-select" id="f-month" onchange="applyFilters()">
+      <option value="">All Months</option>
+    </select>
     <span class="f-count" id="f-count"></span>
   </div>
 
@@ -433,8 +401,8 @@ footer{border-top:1px solid var(--border);padding:22px 60px;display:flex;justify
 </section>
 
 <footer>
-  <span class="footer-brand"><img src="data:image/jpeg;base64,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" alt="Three D Integrated Solutions" style="height:26px;width:auto;border-radius:4px;padding:2px;background:var(--surface);box-shadow:0 1px 4px rgba(26,23,20,.10);"/><span>Three D Integrated Solutions Ltd.</span></span>
-  <span>Payment of Bonus Act, 1965 · CLC Construction/Maintenance MW · Area A/B/C · ROUNDDOWN formula</span>
+  <span class="footer-brand">BonusCalc</span>
+  <span>Payment of Bonus Act, 1965 · Central Govt MW · Area A/B/C · ROUNDDOWN formula</span>
   <span></span>
 </footer>
 
@@ -446,54 +414,40 @@ footer{border-top:1px solid var(--border);padding:22px 60px;display:flex;justify
    Key: [period_start_month_idx] where 0=Apr, 6=Oct
 ══════════════════════════════════════════════════════════════════ */
 const MW_PERIODS = [
-  // Construction or Maintenance of Roads/Runways/Building Operations (F.No.1/7(3) & 1/5(3) & 1/6(3) CLC)
-  // Monthly rates = Basic + VDA (per day) x 26 working days
-  // Apr-2022 & Oct-2022: use Apr-2023 rates (no earlier circular available — conservative)
-  // Oct-2023 & Oct-2024: interpolated from CPI-IW index progression between confirmed Apr circulars
-  // Apr-2023, Apr-2024, Apr-2025: CONFIRMED from CLC circulars
-  [4,2022,  9,2022,  {A:{UNSKILLED:19136,SEMISKI:21216,SKILLED:23322,HIGHSKI:25298}, B:{UNSKILLED:16016,SEMISKI:18070,SKILLED:21216,HIGHSKI:23322}, C:{UNSKILLED:12844,SEMISKI:15002,SKILLED:18070,HIGHSKI:21216}}],
-  [10,2022, 3,2023,  {A:{UNSKILLED:19136,SEMISKI:21216,SKILLED:23322,HIGHSKI:25298}, B:{UNSKILLED:16016,SEMISKI:18070,SKILLED:21216,HIGHSKI:23322}, C:{UNSKILLED:12844,SEMISKI:15002,SKILLED:18070,HIGHSKI:21216}}],
-  [4,2023,  9,2023,  {A:{UNSKILLED:19136,SEMISKI:21216,SKILLED:23322,HIGHSKI:25298}, B:{UNSKILLED:16016,SEMISKI:18070,SKILLED:21216,HIGHSKI:23322}, C:{UNSKILLED:12844,SEMISKI:15002,SKILLED:18070,HIGHSKI:21216}}],
-  [10,2023, 3,2024,  {A:{UNSKILLED:19448,SEMISKI:21580,SKILLED:23712,HIGHSKI:25714}, B:{UNSKILLED:16276,SEMISKI:18382,SKILLED:21580,HIGHSKI:23712}, C:{UNSKILLED:13052,SEMISKI:15262,SKILLED:18382,HIGHSKI:21580}}],
-  [4,2024,  9,2024,  {A:{UNSKILLED:20228,SEMISKI:22412,SKILLED:24648,HIGHSKI:26728}, B:{UNSKILLED:16926,SEMISKI:19084,SKILLED:22412,HIGHSKI:24648}, C:{UNSKILLED:13572,SEMISKI:15860,SKILLED:19084,HIGHSKI:22412}}],
-  [10,2024, 3,2025,  {A:{UNSKILLED:20358,SEMISKI:22568,SKILLED:24804,HIGHSKI:26910}, B:{UNSKILLED:17030,SEMISKI:19214,SKILLED:22568,HIGHSKI:24804}, C:{UNSKILLED:13676,SEMISKI:15964,SKILLED:19214,HIGHSKI:22568}}],
-  [4,2025,  9,2025,  {A:{UNSKILLED:20930,SEMISKI:23218,SKILLED:25506,HIGHSKI:27690}, B:{UNSKILLED:17524,SEMISKI:19760,SKILLED:23218,HIGHSKI:25506}, C:{UNSKILLED:14066,SEMISKI:16432,SKILLED:19760,HIGHSKI:23218}}],
+  // [from_month(1-based), from_year, to_month, to_year, {A:{UNSKILLED,SEMI SKILLED,SKILLED,HIGHLY SKILLED}, B:{...}, C:{...}}]
+  [4,2022, 9,2022, {A:{UNSKILLED:18869,SEMISKI:20903,SKILLED:22568,HIGHSKI:24826}, B:{UNSKILLED:15994,SEMISKI:18647,SKILLED:20020,HIGHSKI:22027}, C:{UNSKILLED:12116,SEMISKI:14144,SKILLED:17108,HIGHSKI:20020}}],
+  [10,2022, 3,2023, {A:{UNSKILLED:19291,SEMISKI:21372,SKILLED:23088,HIGHSKI:25397}, B:{UNSKILLED:16354,SEMISKI:19066,SKILLED:20488,HIGHSKI:22540}, C:{UNSKILLED:12402,SEMISKI:14482,SKILLED:17446,HIGHSKI:20488}}],
+  [4,2023, 9,2023, {A:{UNSKILLED:19668,SEMISKI:21797,SKILLED:23960,HIGHSKI:26354}, B:{UNSKILLED:16680,SEMISKI:19484,SKILLED:20926,HIGHSKI:23016}, C:{UNSKILLED:13078,SEMISKI:15240,SKILLED:18271,HIGHSKI:21097}}],
+  [10,2023, 3,2024, {A:{UNSKILLED:20018,SEMISKI:22172,SKILLED:24390,HIGHSKI:26827}, B:{UNSKILLED:16970,SEMISKI:19824,SKILLED:21272,HIGHSKI:23396}, C:{UNSKILLED:13318,SEMISKI:15518,SKILLED:18596,HIGHSKI:21488}}],
+  [4,2024, 9,2024, {A:{UNSKILLED:20358,SEMISKI:22568,SKILLED:24804,HIGHSKI:27282}, B:{UNSKILLED:17264,SEMISKI:19132,SKILLED:21041,HIGHSKI:23144}, C:{UNSKILLED:15548,SEMISKI:17231,SKILLED:18941,HIGHSKI:20836}}],
+  [10,2024, 3,2025, {A:{UNSKILLED:20736,SEMISKI:22976,SKILLED:25272,HIGHSKI:27804}, B:{UNSKILLED:17588,SEMISKI:19498,SKILLED:21428,HIGHSKI:23570}, C:{UNSKILLED:15844,SEMISKI:17570,SKILLED:19298,HIGHSKI:21228}}],
+  [4,2025, 9,2025, {A:{UNSKILLED:21120,SEMISKI:23406,SKILLED:25752,HIGHSKI:28332}, B:{UNSKILLED:17922,SEMISKI:19878,SKILLED:21826,HIGHSKI:24010}, C:{UNSKILLED:16152,SEMISKI:17922,SKILLED:19668,HIGHSKI:21638}}],
 ];
-
-// Pre-built MW lookup: key = 'YYYY-MM' -> {A:{...}, B:{...}, C:{...}}
-const _mwCache = new Map();
-(function(){
-  const MNAMES = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
-  for(const [fm,fy,tm,ty,table] of MW_PERIODS){
-    let y=fy, m=fm;
-    while(y*12+m <= ty*12+tm){
-      const key = `${y}-${String(m).padStart(2,'0')}`;
-      if(!_mwCache.has(key)) _mwCache.set(key, table);
-      m++; if(m>12){m=1;y++;}
-    }
-  }
-})();
 
 function getMW(area, skill, monthYear) {
   if (!monthYear) return 0;
   const parts = monthYear.split('-');
   const MNAMES = {Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
   const mo = MNAMES[parts[0]];
-  let yr = parseInt(parts[1]);
+  const yr = parseInt(parts[1]);
   if (!mo || !yr) return 0;
-  if (yr < 100) yr += 2000;
-  const key = `${yr}-${String(mo).padStart(2,'0')}`;
   const sk = normaliseSkill(skill);
   const ar = area || 'C';
-  const table = _mwCache.get(key) || MW_PERIODS[MW_PERIODS.length-1][4];
-  return (table[ar] || table['C'])[sk] || 0;
+  for (const [fm,fy,tm,ty,table] of MW_PERIODS) {
+    const start = fy*12+fm, end = ty*12+tm, cur = yr*12+mo;
+    if (cur >= start && cur <= end) {
+      return (table[ar] || table['C'])[sk] || 0;
+    }
+  }
+  // fallback: use latest period
+  const last = MW_PERIODS[MW_PERIODS.length-1][4];
+  return (last[ar] || last['C'])[normaliseSkill(skill)] || 0;
 }
 
 function normaliseSkill(skill) {
   const s = (skill||'').toUpperCase().replace(/[-\s]+/g,'');
   if (s.includes('HIGHLY') || s.includes('HIGH')) return 'HIGHSKI';
   if (s.includes('SEMI')) return 'SEMISKI';
-  if (s.startsWith('UN') || s==='UNSKILLED') return 'UNSKILLED'; // must check before SKILL
   if (s.includes('SKILL')) return 'SKILLED';
   return 'UNSKILLED';
 }
@@ -502,13 +456,12 @@ function normaliseSkill(skill) {
    AREA MAPPING
 ══════════════════════════════════════════════════════════════════ */
 const AREA_A = ['ahmedabad','bangalore','chennai','delhi','gurgaon','hyderabad','kolkata','lucknow','mumbai','nagpur','pune','kanpur'];
-const AREA_B = ['amritsar','aurangabad','bhopal','bhuban','bhubn','bhune','calicut','kozhikode','chandigarh','chandigargh','coimbatore','dehradun','goa','guwahati','indore','jaipur','jammu','jodhpur','kochi','madurai','mangalore','meerut','raipur','ranchi','srinagar','shrinagar','surat','trichy','tiruchirappalli','trivandrum','thiruvananthapuram','vadodara','vadodra','varanasi','vizag','visakhapatnam','gorakhpur','hubli','jamnagar','patna','port blair','rajkot','siliguri','vijayawada','vijaywada','belgaum','belagavi'];
+const AREA_B = ['amritsar','aurangabad','bhopal','bhubaneshwar','calicut','kozhikode','chandigarh','coimbatore','dehradun','goa','guwahati','indore','jaipur','jammu','jodhpur','kochi','madurai','mangalore','meerut','raipur','ranchi','srinagar','surat','trichy','tiruchirappalli','trivandrum','thiruvananthapuram','vadodara','varanasi','vizag','visakhapatnam','gorakhpur','hubli','jamnagar','patna','port blair','rajkot','siliguri','vijayawada','vijaywada','belgaum','belagavi'];
 
-// Pre-build area lookup: check each known city token once per call
 function getArea(loc) {
   const l = (loc||'').toLowerCase().replace(/ new$| old$/,'').trim();
-  for(const a of AREA_A){ if(l.includes(a)) return 'A'; }
-  for(const b of AREA_B){ if(l.includes(b)) return 'B'; }
+  if (AREA_A.some(a => l.includes(a))) return 'A';
+  if (AREA_B.some(b => l.includes(b))) return 'B';
   return 'C';
 }
 
@@ -527,26 +480,18 @@ const SKILL_MAP = {
   'DRIVER/ATTENDANT':    'Semi-Skilled',
   'ATTENDANT/HELPER':    'Semi-Skilled',
   'ATTENDANT':           'Semi-Skilled',
-  // Added from DesignationToSkillMapping.xlsx
-  'ENGINEER':            'Highly Skilled',
-  'SR. TECHNICIAN-O&M':  'Highly Skilled',
-  'SUPERVISOR':          'Highly Skilled',
 };
-
-// Pre-build normalised skill map entries for fast lookup
-const _SKILL_ENTRIES = Object.entries(SKILL_MAP).map(([k,v])=>[k.toUpperCase().trim(),v]);
 
 function getSkill(desig) {
   const d = (desig||'').toUpperCase().trim();
   if (SKILL_MAP[d]) return SKILL_MAP[d];
-  for (const [k,v] of _SKILL_ENTRIES) {
+  for (const [k,v] of Object.entries(SKILL_MAP)) {
     if (d.includes(k) || k.includes(d)) return v;
   }
   const dl = d.toLowerCase();
-  if (dl.includes('engineer') || dl.includes('supervisor') || dl.startsWith('sr.')) return 'Highly Skilled';
   if (dl.includes('technician')) return 'Skilled';
   if (dl.includes('helper')) return 'Unskilled';
-  return 'Unskilled';  // default — unknown designation never over-promoted
+  return 'Semi-Skilled';  // default for Attendant, Driver/Attendant variants
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -554,28 +499,7 @@ function getSkill(desig) {
 ══════════════════════════════════════════════════════════════════ */
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-/* Financial-year sort key for a 'Mon-YY' or 'Mon-YYYY' string.
-   Apr=0 … Mar=11 so rows sort Apr-24, May-24 … Mar-25 correctly. */
-function myKey(my){
-  if(!my||my==='Unknown') return 99999;
-  const p=my.split('-');
-  const mi=MON.indexOf(p[0]);
-  if(mi<0) return 99999;
-  let yr=parseInt(p[1])||0;
-  if(yr<100) yr+=2000;          // 2-digit year fix
-  const fyMo = mi>=3 ? mi-3 : mi+9;   // Apr=0, May=1 … Mar=11
-  return yr*100 + fyMo;
-}
-
-const _pmCache = new Map();
 function parseMonth(val, filename) {
-  const cacheKey = String(val) + '|' + (filename||'');
-  if(_pmCache.has(cacheKey)) return _pmCache.get(cacheKey);
-  const result = _parseMonthInner(val, filename);
-  _pmCache.set(cacheKey, result);
-  return result;
-}
-function _parseMonthInner(val, filename) {
   if (!val && !filename) return null;
   // JS Date
   if (val instanceof Date) return `${MON[val.getMonth()]}-${val.getFullYear()}`;
@@ -634,7 +558,7 @@ function readFile(file) {
     reader.onload = e => {
       try {
         // Use raw:true to avoid XLSX.js misinterpreting quotePrefix cells and date formats
-        const wb = XLSX.read(e.target.result, {type:'array', cellDates:false, cellNF:false, cellText:true, dense:false, sheetStubs:false});
+        const wb = XLSX.read(e.target.result, {type:'array', cellDates:false, cellNF:false, cellText:false});
         // Find sheet with employee salary rows (Emp ID column with alphanumeric IDs)
         const prefs = ['salary export','salary','payroll','data','export','sheet1'];
         let sheet = null;
@@ -663,10 +587,36 @@ function readFile(file) {
         if(!sheet) sheet=wb.SheetNames[0];
         const ws = wb.Sheets[sheet];
         const rng = XLSX.utils.decode_range(ws['!ref']||'A1');
-        // Use sheet_to_json for fast bulk extraction (avoids per-cell encode_cell calls)
-        const raw = XLSX.utils.sheet_to_json(ws, {
-          header: 1, defval: null, raw: true
-        });
+        const R=rng.e.r-rng.s.r+1, C=rng.e.c-rng.s.c+1;
+        const raw=[];
+        for(let r=0;r<R;r++){
+          const row=new Array(C).fill(null);
+          for(let c=0;c<C;c++){
+            const addr=XLSX.utils.encode_cell({r:rng.s.r+r,c:rng.s.c+c});
+            const cell=ws[addr];
+            if(!cell||cell.v==null) continue;
+            if(cell.t==='n'){
+              // Check if it's a date serial — numFmtId 14-17 and 22 are date formats
+              const numFmtId = (cell.s && ws['!data'] && ws['!data'][rng.s.r+r] && ws['!data'][rng.s.r+r][rng.s.c+c]) ? 0 : 0;
+              const isDateFmt = cell.w && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(cell.w);
+              if(isDateFmt && cell.v > 30000 && cell.v < 60000){
+                // Convert Excel serial to JS Date
+                const d = new Date(Math.round((cell.v - 25569)*86400*1000));
+                row[c] = d;
+              } else {
+                row[c] = cell.v;
+              }
+            } else if(cell.t==='d'){
+              row[c] = cell.v;
+            } else if(cell.t==='s'||cell.t==='str'){
+              // Strip quotePrefix artefacts — leading apostrophe sometimes bleeds into value
+              row[c] = String(cell.v).replace(/^'+/, '');
+            } else {
+              row[c] = cell.w || cell.v || null;
+            }
+          }
+          raw.push(row);
+        }
         resolve({raw, filename:file.name, sheet});
       } catch(err){reject(err);}
     };
@@ -693,7 +643,7 @@ function parseRows(raw, filename) {
   const headers=raw[headerIdx].map(h=>String(h==null?'':h).trim());
   const headersLC=headers.map(h=>norm(h));
 
-  const c_id  = gc(headersLC,'emp id','empid','employee id','emp. id','empno','emp code','empcode','emp_code');
+  const c_id  = gc(headersLC,'emp id','empid','employee id','emp. id','empno');
   const c_nm  = gc(headersLC,'employee name','emp name','empname');
   const c_dg  = gc(headersLC,'designation','desig');
   const c_bt  = gc(headersLC,'basic (th)','basic(th)','basicth','basic th');
@@ -705,61 +655,50 @@ function parseRows(raw, filename) {
   const c_ba  = (() => { let last=-1; headersLC.forEach((h,i)=>{if(h&&norm(h)==='basic')last=i;}); return last; })();
   const c_va  = (() => { let last=-1; headersLC.forEach((h,i)=>{const n=norm(h);if(n==='vda'||n==='da')last=i;}); return last; })();
 
-  // Pre-compiled regexes — once per file, not per row
-  const RE_SKIP_ROW  = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[\s\-\/]*(?:\d{2,4}|item)/i;
-  const RE_ITEM      = /(\d+\s*item|\bitem[s]?\s*[:\/]\s*\d+|item\(s\))/i;
-  const RE_DIGITS    = /^\d+$/;
-  const RE_EMP_START = /^[A-Za-z]{2,}/;
-  const RE_HAS_NUM   = /[0-9]/;
+  // Detect Excel group-summary / subtotal rows anywhere in the data.
+  // These rows look like: "Mar/2025: 6 Item(s)", "Apr-2025 : 12 items", etc.
+  function isGroupSummaryRow(row) {
+    if (!row) return false;
+    for (let ci = 0; ci < Math.min(row.length, 8); ci++) {
+      const v = String(row[ci] == null ? '' : row[ci]).trim();
+      if (!v) continue;
+      // Pattern: contains "Item(s)" or "items" (case-insensitive)
+      if (/item/i.test(v)) return true;
+      // Pattern: "Mon/YYYY:" or "Mon-YYYY:" group header with colon
+      if (/^[A-Za-z]{3}[\-\/]\d{4}\s*:/i.test(v)) return true;
+    }
+    return false;
+  }
 
-  let firstDataRowSeen=false;
   const rows=[];
-
   for(let i=headerIdx+1;i<raw.length;i++){
     const row=raw[i];
-    if(!row) continue;
-
-    // Fast empty check — plain loop, no closure
-    let hasVal=false;
-    for(let ci=0;ci<row.length;ci++){if(row[ci]!==null&&row[ci]!==''){hasVal=true;break;}}
-    if(!hasVal) continue;
-
-    // Single pass: skip month/year rows (leading) AND Month/Item:N rows (any position)
-    // RE_SKIP_ROW catches: 'Apr-2025', 'Apr-25', 'Feb/Item:06', 'Jan/Item:06' etc.
-    // RE_ITEM catches:     '6 Item(s)', 'Items:42', 'Nov/Item:06' etc.
-    {
-      let skip=false;
-      for(let ci=0;ci<row.length;ci++){
-        if(row[ci]==null||row[ci]==='') continue;
-        const v=String(row[ci]).trim();
-        if(RE_SKIP_ROW.test(v)||RE_ITEM.test(v)){skip=true;break;}
-      }
-      if(skip) continue;
-      firstDataRowSeen=true;
-    }
-
+    if(!row||row.every(c=>c===null||c==='')) continue;
+    if(isGroupSummaryRow(row)) continue;
     if(c_id<0) continue;
 
-    // Get employee ID from mapped column
-    let eid=row[c_id]==null?'':String(row[c_id]).trim();
+    // Primary: get eid from resolved column
+    let eid=String(row[c_id]==null?'':row[c_id]).trim();
 
-    // Fallback: scan first 10 cols if mapped col empty
-    if(eid.length<3){
-      for(let ci=0;ci<Math.min(row.length,10);ci++){
-        if(row[ci]==null||row[ci]==='') continue;
-        const v=String(row[ci]).trim();
-        if(v.length>=4&&v.length<=20&&RE_EMP_START.test(v)&&RE_HAS_NUM.test(v)&&!v.toLowerCase().includes('total')){
-          eid=v;break;
+    // Fallback: if c_id cell is empty (row shorter than expected or XLSX.js padding issue)
+    // scan entire row for first cell that looks like an employee ID
+    if(!eid || eid.length < 3) {
+      for(let ci=0; ci<Math.min(row.length, 10); ci++){
+        const v = String(row[ci]==null?'':row[ci]).trim();
+        // Employee ID pattern: starts with letters, has alphanumeric chars, 4-20 chars
+        if(v.length>=4 && v.length<=20 && /^[A-Za-z]{2,}/.test(v) && /[0-9]/.test(v) && !v.toLowerCase().includes('total') && !v.toLowerCase().includes('grand')){
+          eid = v; break;
         }
       }
     }
 
-    if(!eid||eid.length<3||eid.length>25) continue;
-    if(RE_DIGITS.test(eid)) continue;
-    const eidL=eid.toLowerCase();
-    if(eidL.includes('total')||eidL.includes('grand')) continue;
-    const eidN=norm(eid);
-    if(eidN==='empid'||eidN==='employeeid'||eidN==='empcode') continue;
+    // Skip empty, numeric-only, header keywords, and grand total rows
+    if(!eid) continue;
+    if(/^\d+$/.test(eid)) continue;
+    if(eid.toLowerCase().includes('grand total')) continue;
+    if(eid.toLowerCase().includes('total')) continue;
+    if(norm(eid)==='empid'||norm(eid)==='employeeid') continue;
+    if(eid.length < 3 || eid.length > 25) continue;
 
     const bt=parseFloat(row[c_bt])||0;
     const vt=parseFloat(row[c_vt])||0;
@@ -773,11 +712,16 @@ function parseRows(raw, filename) {
     const skill=getSkill(desig);
     const area=getArea(loc);
     const mw=getMW(area,skill,monthYear);
-    const elig=theoretical>0&&theoretical<21000;
+    // Eligibility: statutory = must be < 21000; extended = all with wages > 0 are eligible
+    const elig=theoretical>0&&(bonusAbove21k||theoretical<21000);
+    // Wage used for bonus: capped at 21000 when above threshold in extended mode
+    const bonusWage=bonusAbove21k?Math.min(theoretical,21000):theoretical;
     let proratedMW=0,bonus=0;
     if(elig&&sal_cal_days>0&&mw>0){
       proratedMW=Math.floor((mw/sal_cal_days)*pay_days);
-      bonus=Math.floor(proratedMW*0.0833);
+      // In extended mode cap bonus wage at 21000; bonus base = min(proratedMW, prorated 21000)
+      const bonusBase=bonusAbove21k?Math.min(proratedMW,Math.floor((21000/sal_cal_days)*pay_days)):proratedMW;
+      bonus=Math.round(bonusBase*0.0833);
     }
     rows.push({
       emp_id:eid,
@@ -795,6 +739,42 @@ function parseRows(raw, filename) {
    STATE
 ══════════════════════════════════════════════════════════════════ */
 let uploadedFiles=[], allRows=[], filteredRows=[], sortCol=-1, sortDir=1;
+let bonusAbove21k=false;  // user-configured setting
+
+function updateSettingUI(){
+  bonusAbove21k=document.getElementById('toggle-above21k').checked;
+  const pill=document.getElementById('setting-row');
+  const desc=document.getElementById('setting-desc');
+  if(bonusAbove21k){
+    pill.classList.add('active');
+    desc.textContent='Extended Mode';
+  } else {
+    pill.classList.remove('active');
+    desc.textContent='Statutory Mode';
+  }
+}
+
+function reCalcWithSetting(){
+  updateSettingUI();
+  if(!allRows.length) return;
+  // Re-run bonus calculation on already-parsed raw data with new flag
+  allRows = allRows.map(r => {
+    const theoretical = r.theoretical;
+    const elig = theoretical > 0 && (bonusAbove21k || theoretical < 21000);
+    let proratedMW = 0, bonus = 0;
+    if(elig && r.sal_cal_days > 0 && r.min_wages > 0){
+      proratedMW = Math.floor((r.min_wages / r.sal_cal_days) * r.pay_days);
+      const bonusBase = bonusAbove21k
+        ? Math.min(proratedMW, Math.floor((21000 / r.sal_cal_days) * r.pay_days))
+        : proratedMW;
+      bonus = Math.round(bonusBase * 0.0833);
+    }
+    return {...r, eligible: elig, prorated_mw: proratedMW, bonus};
+  });
+  applyFilters();
+  updateCards(filteredRows);
+  toast(bonusAbove21k ? 'Extended mode: bonus applicable above ₹21,000' : 'Statutory mode: ₹21,000 ceiling applied', 'ok');
+}
 
 /* ══════════════════════════════════════════════════════════════════
    FILE INPUT
@@ -856,7 +836,7 @@ async function runCalc(){
       if(rows.length===0){toast(`No employee rows found in ${filename}`,'err');}
       else{allRows.push(...rows);toast(`${rows.length} rows from ${filename}`,'ok');}
     }catch(e){toast(`Error reading ${uploadedFiles[i].name}: ${e.message}`,'err');}
-    await new Promise(r=>setTimeout(r,0)); // yield to UI
+    await new Promise(r=>setTimeout(r,60));
   }
 
   pf.style.width='100%';
@@ -866,21 +846,13 @@ async function runCalc(){
 
   if(!allRows.length){toast('No data extracted. Check file format.','err');calcBtn.disabled=false;return;}
 
-  // Populate month picker checkboxes in FY order
-  const months=[...new Set(allRows.map(r=>r.month_year))].sort((a,b)=>myKey(a)-myKey(b));
-  const mpList=document.getElementById('mp-list');
-  mpList.innerHTML='';
-  // Count per month in one pass instead of per-month .filter()
-  const mCount=new Map(); allRows.forEach(r=>mCount.set(r.month_year,(mCount.get(r.month_year)||0)+1));
-  months.forEach(m=>{
-    const lbl=document.createElement('label');
-    lbl.className='mp-item';
-    lbl.innerHTML=`<input type="checkbox" value="${m}" checked onchange="applyFilters();"/>${m}<span class="mp-badge">${mCount.get(m)||0}</span>`;
-    mpList.appendChild(lbl);
-  });
-  updateMonthBtnLabel();
+  // Populate month filter
+  const months=[...new Set(allRows.map(r=>r.month_year))].sort();
+  const mf=document.getElementById('f-month');
+  mf.innerHTML='<option value="">All Months</option>';
+  months.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;mf.appendChild(o);});
 
-  filteredRows=[...allRows].sort((a,b)=>myKey(a.month_year)-myKey(b.month_year)||String(a.emp_id).localeCompare(String(b.emp_id)));
+  filteredRows=[...allRows];
   renderTable(filteredRows);
   updateCards(filteredRows);
   document.getElementById('results').classList.add('on');
@@ -894,6 +866,7 @@ async function runCalc(){
 function renderTable(rows){
   const tbody=document.getElementById('tbl-body');
   const tfoot=document.getElementById('tbl-foot');
+  tbody.innerHTML='';
   document.getElementById('f-count').textContent=`${rows.length} record${rows.length!==1?'s':''}`;
 
   if(!rows.length){
@@ -901,16 +874,11 @@ function renderTable(rows){
     tfoot.innerHTML=''; return;
   }
 
-  // Build entire table HTML as string then set once — far faster than per-row DOM ops
-  let sno=0, curMonth=null, html='';
-  for(const r of rows){
-    if(r.month_year !== curMonth){
-      curMonth=r.month_year; sno=0;
-      html+=`<tr class="month-group-header"><td colspan="16" style="background:var(--accent-lo);border-top:2px solid var(--accent);border-bottom:1px solid var(--border);padding:8px 14px;font-family:var(--serif);font-size:15px;color:var(--accent);letter-spacing:.01em;">${esc(r.month_year)}</td></tr>`;
-    }
-    sno++;
-    html+=`<tr>
-      <td class="td-sno">${sno}</td>
+  rows.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.style.animationDelay=`${Math.min(i*10,250)}ms`;
+    tr.innerHTML=`
+      <td class="td-sno">${i+1}</td>
       <td class="td-id">${esc(r.emp_id)}</td>
       <td class="td-name">${esc(r.emp_name)}</td>
       <td>${esc(r.month_year)}</td>
@@ -925,10 +893,9 @@ function renderTable(rows){
       <td class="td-num">${r.pay_days}</td>
       <td class="td-num">${r.prorated_mw?fmt(r.prorated_mw):'—'}</td>
       <td><span class="${r.eligible?'badge-yes':'badge-no'}">${r.eligible?'Yes':'No'}</span></td>
-      <td class="td-bonus td-num">${r.eligible?fmt(r.bonus):'—'}</td></tr>`;
-  }
-  tbody.innerHTML=html;
-
+      <td class="td-bonus td-num">${r.eligible?fmt(r.bonus):'—'}</td>`;
+    tbody.appendChild(tr);
+  });
 
   const elig=rows.filter(r=>r.eligible);
   const tot=elig.reduce((s,r)=>s+r.bonus,0);
@@ -955,58 +922,22 @@ function updateCards(rows){
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   MONTH PICKER HELPERS
-══════════════════════════════════════════════════════════════════ */
-function toggleMonthPicker(e){
-  e.stopPropagation();
-  document.getElementById('month-picker-btn').classList.toggle('open');
-  document.getElementById('month-picker-drop').classList.toggle('open');
-}
-document.addEventListener('click',()=>{
-  document.getElementById('month-picker-btn')?.classList.remove('open');
-  document.getElementById('month-picker-drop')?.classList.remove('open');
-});
-function getSelectedMonths(){
-  return [...document.querySelectorAll('#mp-list input[type=checkbox]:checked')].map(c=>c.value);
-}
-function updateMonthBtnLabel(){
-  const all=[...document.querySelectorAll('#mp-list input[type=checkbox]')];
-  const sel=all.filter(c=>c.checked);
-  const lbl=document.getElementById('mp-label');
-  if(!lbl) return;
-  if(sel.length===0) lbl.textContent='No Months ';
-  else if(sel.length===all.length) lbl.textContent='All Months ';
-  else if(sel.length===1) lbl.textContent=sel[0].value+' ';
-  else lbl.textContent=sel.length+' Months ';
-}
-function selectAllMonths(){
-  document.querySelectorAll('#mp-list input[type=checkbox]').forEach(c=>c.checked=true);
-  updateMonthBtnLabel(); applyFilters();
-}
-function clearAllMonths(){
-  document.querySelectorAll('#mp-list input[type=checkbox]').forEach(c=>c.checked=false);
-  updateMonthBtnLabel(); applyFilters();
-}
-
-/* ══════════════════════════════════════════════════════════════════
    FILTERS
 ══════════════════════════════════════════════════════════════════ */
 function applyFilters(){
   const search=document.getElementById('f-search').value.toLowerCase();
   const elig=document.getElementById('f-elig').value;
   const area=document.getElementById('f-area').value;
-  const selMonths=getSelectedMonths();
+  const month=document.getElementById('f-month').value;
   filteredRows=allRows.filter(r=>{
     if(search&&!r.emp_name.toLowerCase().includes(search)&&!r.emp_id.toLowerCase().includes(search)) return false;
     if(elig&&(r.eligible?'Yes':'No')!==elig) return false;
     if(area&&r.area!==area) return false;
-    if(selMonths.length&&!selMonths.includes(r.month_year)) return false;
+    if(month&&r.month_year!==month) return false;
     return true;
   });
-  updateMonthBtnLabel();
-  filteredRows.sort((a,b)=>myKey(a.month_year)-myKey(b.month_year)||String(a.emp_id).localeCompare(String(b.emp_id)));
   if(sortCol>=0) doSort();
-  renderTable(filteredRows);
+  else renderTable(filteredRows);
   updateCards(filteredRows);
 }
 
@@ -1027,7 +958,6 @@ function sortTbl(col){
 function doSort(){
   const key=SORT_KEYS[sortCol];
   filteredRows.sort((a,b)=>{
-    if(key==='month_year') return (myKey(a.month_year)-myKey(b.month_year))*sortDir;
     let va=key==='_elig'?(a.eligible?1:0):(key==='_sno'?0:(a[key]??''));
     let vb=key==='_elig'?(b.eligible?1:0):(key==='_sno'?0:(b[key]??''));
     if(typeof va==='string') va=va.toLowerCase();
