@@ -398,7 +398,7 @@ function normSkillH(s){const u=(s||'').toUpperCase().replace(/[-\s]+/g,'');if(u.
 
 /* AREA */
 const AREA_A=['ahmedabad','bangalore','chennai','delhi','gurgaon','hyderabad','kolkata','lucknow','mumbai','nagpur','pune','kanpur'];
-const AREA_B=['amritsar','aurangabad','bhopal','bhubaneshwar','bhubneshwar','calicut','kozhikode','chandigarh','coimbatore','dehradun','goa','guwahati','indore','jaipur','jammu','jodhpur','kochi','madurai','mangalore','meerut','raipur','ranchi','srinagar','surat','trichy','tiruchirappalli','trivandrum','thiruvananthapuram','vadodara','varanasi','vizag','visakhapatnam','gorakhpur','hubli','jamnagar','patna','port blair','rajkot','siliguri','vijayawada','vijaywada','belgaum','belagavi'];
+const AREA_B=['amritsar','aurangabad','bhopal','bhubaneshwar','bhubneshwar','calicut','kozhikode','chandigarh','chandigargh','coimbatore','dehradun','goa','guwahati','indore','jaipur','jammu','jodhpur','kochi','madurai','mangalore','meerut','raipur','ranchi','srinagar','surat','trichy','tiruchirappalli','trivandrum','thiruvananthapuram','vadodara','varanasi','vizag','visakhapatnam','gorakhpur','hubli','jamnagar','patna','port blair','rajkot','siliguri','vijayawada','vijaywada','belgaum','belagavi'];
 function getArea(loc){const l=(loc||'').toLowerCase().trim();if(AREA_A.some(a=>l.includes(a)))return 'A';if(AREA_B.some(b=>l.includes(b)))return 'B';return 'C';}
 
 /* SKILL MAP */
@@ -510,7 +510,9 @@ function parseRows(raw,filename){
   }
 
   let fd=hi+1;
-  while(fd<raw.length&&!isValidEmp(raw[fd])){if(fd-hi>10)break;fd++;}
+  // Skip the single row immediately after header if it is not a valid employee record
+  // (e.g. row-count label like "Dec/2024 : 10 Item(s)" or a blank separator row)
+  if(fd<raw.length&&!isValidEmp(raw[fd])){fd++;}
 
   const rows=[];
   for(let i=fd;i<raw.length;i++){
