@@ -202,6 +202,14 @@ footer{border-top:1px solid var(--border);padding:22px 60px;display:flex;justify
 .modal-tbl td{padding:9px 12px;border-bottom:1px solid rgba(226,218,208,.5);color:var(--ink);}
 .modal-tbl tbody tr:hover td{background:var(--accent-lo);}
 .modal-tbl tr:last-child td{border-bottom:none;}
+.skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;}
+.skill-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;background:var(--base);border-radius:2px;border:1px solid var(--border);}
+.skill-desig{font-size:12.5px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+@media(max-width:640px){.skill-grid{grid-template-columns:1fr;}}
+.area-section-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:16px 0 8px;}
+.area-section-lbl:first-child{margin-top:0;}
+.area-chip-row{display:flex;flex-wrap:wrap;gap:6px;}
+.area-chip{background:var(--base);border:1px solid var(--border);color:var(--ink);font-size:12.5px;font-weight:500;padding:5px 11px;border-radius:2px;white-space:nowrap;}
 .skill-badge{display:inline-block;padding:2px 9px;border-radius:2px;font-size:11px;font-weight:700;letter-spacing:.04em;}
 .sk-hs{background:#EDE9FE;color:#5B21B6;}
 .sk-sk{background:var(--green-lo);color:var(--green);}
@@ -402,7 +410,7 @@ const AREA_B=['amritsar','aurangabad','bhopal','bhubaneshwar','bhubneshwar','cal
 function getArea(loc){const l=(loc||'').toLowerCase().trim();if(AREA_A.some(a=>l.includes(a)))return 'A';if(AREA_B.some(b=>l.includes(b)))return 'B';return 'C';}
 
 /* SKILL MAP */
-const SKILL_MAP={'OPERATOR-BHS':'Skilled','SITE INCHARGE':'Highly Skilled','JUNIOR TECHNICIAN':'Semi-Skilled','TECHNICIAN-O&M':'Skilled','JR. TECHNICIAN -O&M':'Semi-Skilled','TECHNICIAN':'Skilled','HELPER':'Unskilled','TECHNICIAN CUM DRIVER':'Skilled','DRIVER/ATTENDANT':'Semi-Skilled','ATTENDANT/HELPER':'Semi-Skilled','ATTENDANT':'Semi-Skilled','SUPERVISOR':'Highly Skilled','ENGINEER':'Highly Skilled','SR. TECHNICIAN-O&M':'Highly Skilled'};
+const SKILL_MAP={'OPERATOR-BHS':'Skilled','SITE INCHARGE':'Highly Skilled','JUNIOR TECHNICIAN':'Semi-Skilled','TECHNICIAN-O&M':'Skilled','JR. TECHNICIAN -O&M':'Semi-Skilled','TECHNICIAN':'Skilled','HELPER':'Unskilled','TECHNICIAN CUM DRIVER':'Skilled','DRIVER/ATTENDANT':'Semi-Skilled','ATTENDANT/HELPER':'Semi-Skilled','ATTENDANT':'Semi-Skilled','SUPERVISOR':'Highly Skilled','ENGINEER':'Highly Skilled','SR. TECHNICIAN-O&M':'Highly Skilled','TECH ELECTRICAL':'Skilled'};
 function getSkill(desig){
   const d=(desig||'').toUpperCase().trim();
   if(SKILL_MAP[d])return SKILL_MAP[d];
@@ -541,17 +549,27 @@ function parseRows(raw,filename){
     const loc=c_loc>=0?String(row[c_loc]==null?'':row[c_loc]).trim():'';
     const division=c_div>=0?String(row[c_div]==null?'':row[c_div]).trim():loc;
     const monthYear=(c_my>=0?parseMonth(row[c_my],filename):null)||parseMonth(null,filename)||'Unknown';
-    const sal_cal_days=c_sd>=0?parseInt(row[c_sd])||31:31;
-    const pay_days=c_pd>=0?parseInt(row[c_pd])||sal_cal_days:sal_cal_days;
+    const sal_cal_days_raw=c_sd>=0?parseFloat(row[c_sd]):NaN;
+    const sal_cal_days=Number.isFinite(sal_cal_days_raw)?sal_cal_days_raw:31;
+    const pay_days_raw=c_pd>=0?parseFloat(row[c_pd]):NaN;
+    const pay_days=Number.isFinite(pay_days_raw)?pay_days_raw:sal_cal_days;
     let doj='';
     if(c_doj>=0&&row[c_doj]!=null){const dv=row[c_doj];if(dv instanceof Date){doj=`${String(dv.getDate()).padStart(2,'0')}/${String(dv.getMonth()+1).padStart(2,'0')}/${dv.getFullYear()}`;}else{doj=String(dv).trim();}}
     const skill=getSkill(desig);
     const area=getArea(loc);
-    const mw=getMW(area,skill,monthYear,eid,loc);
-    const elig=bt+vt>0&&bt+vt<21000;
-    const app_govt=isHaryanaEmp(eid)?'Haryana State':isChennaiEmp(loc)?'Tamil Nadu State':'Central Govt';
+    const isCappedProj=/\bt3\b[\s\S]*\bbhs\b|\bt1\b[\s\S]*\bbhs\b|gems/i.test(division);
+    const isFtiOnly=!isCappedProj&&/fti/i.test(division);
+    const isSpecialDiv=isCappedProj||isFtiOnly;
+    const mw=isSpecialDiv?(bt+vt):getMW(area,skill,monthYear,eid,loc);
+    const elig=isCappedProj?true:(bt+vt>0&&bt+vt<21000);
+    const app_govt=isCappedProj?'N/A':isFtiOnly?'N/A':isHaryanaEmp(eid)?'Haryana State':isChennaiEmp(loc)?'Tamil Nadu State':'Central Govt';
     let proratedMW=0,bonus=0;
-    if(elig&&sal_cal_days>0&&mw>0){proratedMW=Math.round((mw/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
+    if(isCappedProj){
+      const earnedWage=Math.min(bt+vt,21000);
+      proratedMW=earnedWage;bonus=Math.round(earnedWage*0.0833);
+    }else if(isFtiOnly){
+      if(elig){proratedMW=bt+vt;bonus=Math.round((bt+vt)*0.0833);}
+    }else if(elig&&sal_cal_days>0&&mw>0){proratedMW=Math.round((mw/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
     rows.push({emp_id:eid,emp_name:c_nm>=0?String(row[c_nm]||'').trim():'',doj,month_year:monthYear,designation:desig,skill,location:loc,division,area,basic_th:bt,vda_th:vt,fixed_basic_da:bt+vt,app_govt,theoretical:bt+vt,min_wages:mw,sal_cal_days,pay_days,prorated_mw:proratedMW,eligible:elig,bonus});
   }
   return rows;
@@ -691,25 +709,23 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelec
       <button class="modal-close" onclick="closeModal('modal-skill')">&#10005;</button>
     </div>
     <div class="modal-body">
-      <table class="modal-tbl">
-        <thead><tr><th>#</th><th>Designation</th><th>Skill Level</th></tr></thead>
-        <tbody>
-          <tr><td>1</td><td>OPERATOR-BHS</td><td><span class="skill-badge sk-sk">Skilled</span></td></tr>
-          <tr><td>2</td><td>SITE INCHARGE</td><td><span class="skill-badge sk-hs">Highly Skilled</span></td></tr>
-          <tr><td>3</td><td>JUNIOR TECHNICIAN</td><td><span class="skill-badge sk-ss">Semi-Skilled</span></td></tr>
-          <tr><td>4</td><td>TECHNICIAN-O&amp;M</td><td><span class="skill-badge sk-sk">Skilled</span></td></tr>
-          <tr><td>5</td><td>JR. TECHNICIAN -O&amp;M</td><td><span class="skill-badge sk-ss">Semi-Skilled</span></td></tr>
-          <tr><td>6</td><td>TECHNICIAN</td><td><span class="skill-badge sk-sk">Skilled</span></td></tr>
-          <tr><td>7</td><td>HELPER</td><td><span class="skill-badge sk-un">Unskilled</span></td></tr>
-          <tr><td>8</td><td>Technician Cum Driver</td><td><span class="skill-badge sk-sk">Skilled</span></td></tr>
-          <tr><td>9</td><td>Driver/Attendant</td><td><span class="skill-badge sk-ss">Semi-Skilled</span></td></tr>
-          <tr><td>10</td><td>Attendant/Helper</td><td><span class="skill-badge sk-ss">Semi-Skilled</span></td></tr>
-          <tr><td>11</td><td>Attendant</td><td><span class="skill-badge sk-ss">Semi-Skilled</span></td></tr>
-          <tr><td>12</td><td>ENGINEER</td><td><span class="skill-badge sk-hs">Highly Skilled</span></td></tr>
-          <tr><td>13</td><td>SR. TECHNICIAN-O&amp;M</td><td><span class="skill-badge sk-hs">Highly Skilled</span></td></tr>
-          <tr><td>14</td><td>SUPERVISOR</td><td><span class="skill-badge sk-hs">Highly Skilled</span></td></tr>
-        </tbody>
-      </table>
+      <div class="skill-grid">
+        <div class="skill-row"><span class="skill-desig">Operator-BHS</span><span class="skill-badge sk-sk">Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Site Incharge</span><span class="skill-badge sk-hs">Highly Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Junior Technician</span><span class="skill-badge sk-ss">Semi-Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Technician-O&amp;M</span><span class="skill-badge sk-sk">Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Jr. Technician -O&amp;M</span><span class="skill-badge sk-ss">Semi-Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Technician</span><span class="skill-badge sk-sk">Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Helper</span><span class="skill-badge sk-un">Unskilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Technician Cum Driver</span><span class="skill-badge sk-sk">Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Driver/Attendant</span><span class="skill-badge sk-ss">Semi-Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Attendant/Helper</span><span class="skill-badge sk-ss">Semi-Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Attendant</span><span class="skill-badge sk-ss">Semi-Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Engineer</span><span class="skill-badge sk-hs">Highly Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Sr. Technician-O&amp;M</span><span class="skill-badge sk-hs">Highly Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Supervisor</span><span class="skill-badge sk-hs">Highly Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Tech Electrical</span><span class="skill-badge sk-sk">Skilled</span></div>
+      </div>
       <p style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Fallback: "Technician" variants = Skilled &middot; "Helper" = Unskilled &middot; "Supervisor/Engineer/Incharge" = Highly Skilled &middot; others = Semi-Skilled</p>
     </div>
   </div>
@@ -782,53 +798,19 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelec
       <button class="modal-close" onclick="closeModal('modal-area')">&#10005;</button>
     </div>
     <div class="modal-body">
-      <table class="modal-tbl">
-        <thead><tr><th>#</th><th>Location</th><th>Area</th></tr></thead>
-        <tbody>
-          <tr><td>1</td><td>Ahmedabad</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>2</td><td>Bangalore</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>3</td><td>Chennai</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>4</td><td>Delhi</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>5</td><td>Gurgaon</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>6</td><td>Hyderabad</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>7</td><td>Kolkata</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>8</td><td>Lucknow</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>9</td><td>Mumbai</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>10</td><td>Nagpur</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>11</td><td>Pune</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>12</td><td>Kanpur</td><td><span class="td-area area-A">A</span></td></tr>
-          <tr><td>13</td><td>Amritsar</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>14</td><td>Aurangabad</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>15</td><td>Bhopal</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>16</td><td>Bhubaneshwar</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>16a</td><td>Bhubneshwar</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>17</td><td>Calicut / Kozhikode</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>18</td><td>Chandigarh</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>19</td><td>Coimbatore</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>20</td><td>Dehradun</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>21</td><td>Goa</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>22</td><td>Guwahati</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>23</td><td>Indore</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>24</td><td>Jaipur</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>25</td><td>Jammu</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>26</td><td>Jodhpur</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>27</td><td>Kochi</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>28</td><td>Madurai</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>29</td><td>Mangalore</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>30</td><td>Meerut</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>31</td><td>Raipur</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>32</td><td>Rajkot</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>33</td><td>Ranchi</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>34</td><td>Srinagar</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>35</td><td>Surat</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>36</td><td>Trichy / Tiruchirappalli</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>37</td><td>Trivandrum / Thiruvananthapuram</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>38</td><td>Vadodara</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>39</td><td>Varanasi</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>40</td><td>Vizag / Visakhapatnam</td><td><span class="td-area area-B">B</span></td></tr>
-          <tr><td>41</td><td>All other cities</td><td><span class="td-area area-C">C</span></td></tr>
-        </tbody>
-      </table>
+      <div class="area-section-lbl">Area A</div>
+      <div class="area-chip-row">
+        <span class="area-chip">Ahmedabad</span><span class="area-chip">Bangalore</span><span class="area-chip">Chennai</span><span class="area-chip">Delhi</span><span class="area-chip">Gurgaon</span><span class="area-chip">Hyderabad</span><span class="area-chip">Kolkata</span><span class="area-chip">Lucknow</span><span class="area-chip">Mumbai</span><span class="area-chip">Nagpur</span><span class="area-chip">Pune</span><span class="area-chip">Kanpur</span>
+      </div>
+      <div class="area-section-lbl">Area B</div>
+      <div class="area-chip-row">
+        <span class="area-chip">Amritsar</span><span class="area-chip">Aurangabad</span><span class="area-chip">Bhopal</span><span class="area-chip">Bhubaneshwar</span><span class="area-chip">Calicut / Kozhikode</span><span class="area-chip">Chandigarh</span><span class="area-chip">Coimbatore</span><span class="area-chip">Dehradun</span><span class="area-chip">Goa</span><span class="area-chip">Guwahati</span><span class="area-chip">Indore</span><span class="area-chip">Jaipur</span><span class="area-chip">Jammu</span><span class="area-chip">Jodhpur</span><span class="area-chip">Kochi</span><span class="area-chip">Madurai</span><span class="area-chip">Mangalore</span><span class="area-chip">Meerut</span><span class="area-chip">Raipur</span><span class="area-chip">Rajkot</span><span class="area-chip">Ranchi</span><span class="area-chip">Srinagar</span><span class="area-chip">Surat</span><span class="area-chip">Trichy / Tiruchirappalli</span><span class="area-chip">Trivandrum / Thiruvananthapuram</span><span class="area-chip">Vadodara</span><span class="area-chip">Varanasi</span><span class="area-chip">Vizag / Visakhapatnam</span>
+      </div>
+      <div class="area-section-lbl">Area C</div>
+      <div class="area-chip-row">
+        <span class="area-chip">All other cities</span>
+      </div>
+    </div>
       <p style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Any location not listed above defaults to Area C. Classification as per CLC notification dated 19th January 2017.</p>
     </div>
   </div>
