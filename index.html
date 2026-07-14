@@ -377,21 +377,38 @@ const MW_PERIODS=[
 ];
 /* MW - Haryana State (Construction & Maintenance) W.E.F.01-01-2025; Rule: EmpID[0:2]==="HO" */
 const MW_HARYANA=[[1,2025,12,2099,{UNSKILLED:11257.12,SEMISKIA:11819.94,SEMISKIB:12410.91,SKILLEDA:13031.47,SKILLEDB:13683.06,HIGHSKI:14367.21}]];
-/* MW - Tamil Nadu State (Construction & Maintenance) — Rule: Branch contains Chennai.
-   Source: Official state wage sheet "Chennai, Tuticorin & Coimbatore A Zone" (verified, all 4 skill
-   categories, Basic Rate/Day is CONSTANT since 07/12/2022; only DA/day changes each period).
-   Monthly Gross = (Basic + DA) x 30 days [confirmed from source monthly-gross column, NOT 26 days].
-   Basic (Rs/day, unchanged 07/12/2022 onward): Unskilled 560, Semi-Skilled 603, Skilled 622.5, Highly Skilled 640.5. */
+/* MW - Tamil Nadu State (Construction & Maintenance) — Zone rule (per user):
+     Area A: Chennai, Tuticorin, Coimbatore
+     Area B: Salem, Trichy
+     Area C: Madurai
+   Source: Official state wage sheet, Basic Rate/Day CONSTANT per zone since 07/12/2022; only DA/day changes each period.
+   Monthly Gross = (Basic + DA) x 30 days [confirmed from source monthly-gross column]. */
 const MW_TAMILNADU=[
-  [12,2022,3,2023,{UNSKILLED:26240,SEMISKI:27530,SKILLED:28115,HIGHSKI:28655}],   // DA 314.65/day
-  [4,2023,3,2024, {UNSKILLED:29471,SEMISKI:30761,SKILLED:31346,HIGHSKI:31886}],   // DA 422.35/day
-  [4,2024,3,2025, {UNSKILLED:31085,SEMISKI:32375,SKILLED:32960,HIGHSKI:33500}],   // DA 476.15/day
-  [4,2025,3,2026, {UNSKILLED:31488,SEMISKI:32778,SKILLED:33363,HIGHSKI:33903}],   // DA 489.60/day
-  [4,2026,12,2099,{UNSKILLED:31569,SEMISKI:32859,SKILLED:33444,HIGHSKI:33984}]    // DA 492.30/day
+  [12,2022,3,2023,{A:{UNSKILLED:26240,SEMISKI:27530,SKILLED:28115,HIGHSKI:28655},
+                    B:{UNSKILLED:22640,SEMISKI:27080,SKILLED:27320,HIGHSKI:28190},
+                    C:{UNSKILLED:22460,SEMISKI:26660,SKILLED:26900,HIGHSKI:27785}}],
+  [4,2023,3,2024, {A:{UNSKILLED:29471,SEMISKI:30761,SKILLED:31346,HIGHSKI:31886},
+                    B:{UNSKILLED:26021,SEMISKI:30551,SKILLED:30761,HIGHSKI:31871},
+                    C:{UNSKILLED:25691,SEMISKI:29891,SKILLED:30131,HIGHSKI:31016}}],
+  [4,2024,3,2025, {A:{UNSKILLED:31085,SEMISKI:32375,SKILLED:32960,HIGHSKI:33500},
+                    B:{UNSKILLED:27635,SEMISKI:32165,SKILLED:32375,HIGHSKI:33485},
+                    C:{UNSKILLED:27305,SEMISKI:31505,SKILLED:31745,HIGHSKI:32630}}],
+  [4,2025,3,2026, {A:{UNSKILLED:31488,SEMISKI:32778,SKILLED:33363,HIGHSKI:33903},
+                    B:{UNSKILLED:28038,SEMISKI:32568,SKILLED:32778,HIGHSKI:33888},
+                    C:{UNSKILLED:27708,SEMISKI:31908,SKILLED:32148,HIGHSKI:33033}}],
+  [4,2026,12,2099,{A:{UNSKILLED:31569,SEMISKI:32859,SKILLED:33444,HIGHSKI:33984},
+                    B:{UNSKILLED:28119,SEMISKI:32649,SKILLED:32859,HIGHSKI:33969},
+                    C:{UNSKILLED:27789,SEMISKI:31989,SKILLED:32229,HIGHSKI:33114}}]
 ];
 
 function isHaryanaEmp(id){return (id||'').toUpperCase().substring(0,2)==='HO';}
-function isChennaiEmp(branch){return (branch||'').toLowerCase().includes('chennai');}
+function getTNZone(branch){
+  const l=(branch||'').toLowerCase();
+  if(l.includes('chennai')||l.includes('tuticorin')||l.includes('coimbatore'))return 'A';
+  if(l.includes('salem')||l.includes('trichy')||l.includes('tiruchirappalli'))return 'B';
+  if(l.includes('madurai'))return 'C';
+  return null;
+}
 
 function getMW(area,skill,monthYear,empId,branch){
   if(!monthYear)return 0;
@@ -402,10 +419,11 @@ function getMW(area,skill,monthYear,empId,branch){
     for(const[fm,fy,tm,ty,t]of MW_HARYANA){if(yr*12+mo>=fy*12+fm&&yr*12+mo<=ty*12+tm)return t[k]||0;}
     return MW_HARYANA[MW_HARYANA.length-1][4][normSkillH(skill)]||0;
   }
-  if(isChennaiEmp(branch)){
+  const tnZone=getTNZone(branch);
+  if(tnZone){
     const k=normSkill(skill);
-    for(const[fm,fy,tm,ty,t]of MW_TAMILNADU){if(yr*12+mo>=fy*12+fm&&yr*12+mo<=ty*12+tm)return t[k]||0;}
-    return MW_TAMILNADU[MW_TAMILNADU.length-1][4][normSkill(skill)]||0;
+    for(const[fm,fy,tm,ty,t]of MW_TAMILNADU){if(yr*12+mo>=fy*12+fm&&yr*12+mo<=ty*12+tm)return(t[tnZone]||t['A'])[k]||0;}
+    const last=MW_TAMILNADU[MW_TAMILNADU.length-1][4];return(last[tnZone]||last['A'])[k]||0;
   }
   const k=normSkill(skill),ar=area||'C';
   for(const[fm,fy,tm,ty,t]of MW_PERIODS){if(yr*12+mo>=fy*12+fm&&yr*12+mo<=ty*12+tm)return(t[ar]||t['C'])[k]||0;}
@@ -572,7 +590,7 @@ function parseRows(raw,filename){
     const isSpecialDiv=isCappedProj||isFtiOnly;
     const mw=isSpecialDiv?(bt+vt):getMW(area,skill,monthYear,eid,loc);
     const elig=isCappedProj?true:(bt+vt>0&&bt+vt<21000);
-    const app_govt=isCappedProj?'N/A':isFtiOnly?'N/A':isHaryanaEmp(eid)?'Haryana State':isChennaiEmp(loc)?'Tamil Nadu State':'Central Govt';
+    const app_govt=isCappedProj?'N/A':isFtiOnly?'N/A':isHaryanaEmp(eid)?'Haryana State':getTNZone(loc)?'Tamil Nadu State':'Central Govt';
     let proratedMW=0,bonus=0;
     if(isCappedProj){
       const earnedWage=Math.min(bt+vt,21000);
@@ -759,7 +777,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelec
       </table>
       <p style="font-size:11px;color:var(--ink-soft);margin-bottom:16px;">Uses Semi-Skilled B &amp; Skilled B (higher slab). Source: Haryana Labour Dept notification 04/04/2025.</p>
 
-      <p class="modal-section-title" style="color:#7C3AED;">Tamil Nadu State &mdash; Construction &amp; Maintenance &mdash; Rule: Branch contains Chennai</p>
+      <p class="modal-section-title" style="color:#7C3AED;">Tamil Nadu State &mdash; Construction &amp; Maintenance</p>
+      <p style="font-size:11px;color:var(--ink-soft);margin-bottom:10px;">Zone A: Chennai, Tuticorin, Coimbatore &nbsp;&middot;&nbsp; Zone B: Salem, Trichy &nbsp;&middot;&nbsp; Zone C: Madurai</p>
+
+      <p style="font-size:11.5px;font-weight:700;color:var(--ink);margin:10px 0 4px;">Zone A &mdash; Chennai / Tuticorin / Coimbatore</p>
       <table class="modal-tbl">
         <thead><tr><th>Period</th><th>Unskilled</th><th>Semi-Skilled</th><th>Skilled</th><th>Highly Skilled</th></tr></thead>
         <tbody>
@@ -770,7 +791,32 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelec
           <tr><td style="font-weight:600;">Apr 2026 onwards</td><td>31,569.00</td><td>32,859.00</td><td>33,444.00</td><td>33,984.00</td></tr>
         </tbody>
       </table>
-      <p style="font-size:11px;color:var(--ink-soft);margin-bottom:16px;">Chennai, Tuticorin &amp; Coimbatore A Zone. Basic Rate/Day constant since 07/12/2022 (Unskilled &#8377;560, Semi-Skilled &#8377;603, Skilled &#8377;622.50, Highly Skilled &#8377;640.50); DA/day revised periodically. Monthly Gross = (Basic+DA) &times; 30 days. Source: Tamil Nadu Labour Dept. official wage sheet.</p>
+
+      <p style="font-size:11.5px;font-weight:700;color:var(--ink);margin:14px 0 4px;">Zone B &mdash; Salem / Trichy</p>
+      <table class="modal-tbl">
+        <thead><tr><th>Period</th><th>Unskilled</th><th>Semi-Skilled</th><th>Skilled</th><th>Highly Skilled</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600;">Dec 2022 &ndash; Mar 2023</td><td>22,640.00</td><td>27,080.00</td><td>27,320.00</td><td>28,190.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2023 &ndash; Mar 2024</td><td>26,021.00</td><td>30,551.00</td><td>30,761.00</td><td>31,871.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2024 &ndash; Mar 2025</td><td>27,635.00</td><td>32,165.00</td><td>32,375.00</td><td>33,485.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2025 &ndash; Mar 2026</td><td>28,038.00</td><td>32,568.00</td><td>32,778.00</td><td>33,888.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2026 onwards</td><td>28,119.00</td><td>32,649.00</td><td>32,859.00</td><td>33,969.00</td></tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:11.5px;font-weight:700;color:var(--ink);margin:14px 0 4px;">Zone C &mdash; Madurai</p>
+      <table class="modal-tbl">
+        <thead><tr><th>Period</th><th>Unskilled</th><th>Semi-Skilled</th><th>Skilled</th><th>Highly Skilled</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600;">Dec 2022 &ndash; Mar 2023</td><td>22,460.00</td><td>26,660.00</td><td>26,900.00</td><td>27,785.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2023 &ndash; Mar 2024</td><td>25,691.00</td><td>29,891.00</td><td>30,131.00</td><td>31,016.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2024 &ndash; Mar 2025</td><td>27,305.00</td><td>31,505.00</td><td>31,745.00</td><td>32,630.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2025 &ndash; Mar 2026</td><td>27,708.00</td><td>31,908.00</td><td>32,148.00</td><td>33,033.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2026 onwards</td><td>27,789.00</td><td>31,989.00</td><td>32,229.00</td><td>33,114.00</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:11px;color:var(--ink-soft);margin-bottom:16px;">Monthly Gross = (Basic + DA) &times; 30 days. Basic Rate/Day constant per zone since 07/12/2022. Source: Tamil Nadu Labour Dept. official wage sheet.</p>
+
 
       <p class="modal-section-title" style="color:var(--blue);">Central Govt CLC &mdash; Construction &amp; Maintenance &mdash; All other employees (Monthly = Daily x 26)</p>
       <table class="modal-tbl">
