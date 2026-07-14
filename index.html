@@ -377,8 +377,18 @@ const MW_PERIODS=[
 ];
 /* MW - Haryana State (Construction & Maintenance) W.E.F.01-01-2025; Rule: EmpID[0:2]==="HO" */
 const MW_HARYANA=[[1,2025,12,2099,{UNSKILLED:11257.12,SEMISKIA:11819.94,SEMISKIB:12410.91,SKILLEDA:13031.47,SKILLEDB:13683.06,HIGHSKI:14367.21}]];
-/* MW - Tamil Nadu State (Construction & Maintenance) W.E.F.01-10-2024; Rule: Branch contains Chennai */
-const MW_TAMILNADU=[[10,2024,12,2099,{UNSKILLED:14656.72,SEMISKI:15567.76,SKILLED:16986.32,HIGHSKI:18404.88}]];
+/* MW - Tamil Nadu State (Construction & Maintenance) — Rule: Branch contains Chennai.
+   Source: Official state wage sheet "Chennai, Tuticorin & Coimbatore A Zone" (verified, all 4 skill
+   categories, Basic Rate/Day is CONSTANT since 07/12/2022; only DA/day changes each period).
+   Monthly Gross = (Basic + DA) x 30 days [confirmed from source monthly-gross column, NOT 26 days].
+   Basic (Rs/day, unchanged 07/12/2022 onward): Unskilled 560, Semi-Skilled 603, Skilled 622.5, Highly Skilled 640.5. */
+const MW_TAMILNADU=[
+  [12,2022,3,2023,{UNSKILLED:26240,SEMISKI:27530,SKILLED:28115,HIGHSKI:28655}],   // DA 314.65/day
+  [4,2023,3,2024, {UNSKILLED:29471,SEMISKI:30761,SKILLED:31346,HIGHSKI:31886}],   // DA 422.35/day
+  [4,2024,3,2025, {UNSKILLED:31085,SEMISKI:32375,SKILLED:32960,HIGHSKI:33500}],   // DA 476.15/day
+  [4,2025,3,2026, {UNSKILLED:31488,SEMISKI:32778,SKILLED:33363,HIGHSKI:33903}],   // DA 489.60/day
+  [4,2026,12,2099,{UNSKILLED:31569,SEMISKI:32859,SKILLED:33444,HIGHSKI:33984}]    // DA 492.30/day
+];
 
 function isHaryanaEmp(id){return (id||'').toUpperCase().substring(0,2)==='HO';}
 function isChennaiEmp(branch){return (branch||'').toLowerCase().includes('chennai');}
@@ -566,9 +576,9 @@ function parseRows(raw,filename){
     let proratedMW=0,bonus=0;
     if(isCappedProj){
       const earnedWage=Math.min(bt+vt,21000);
-      proratedMW=earnedWage;bonus=Math.round(earnedWage*0.0833);
+      if(sal_cal_days>0){proratedMW=Math.round((earnedWage/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
     }else if(isFtiOnly){
-      if(elig){proratedMW=bt+vt;bonus=Math.round((bt+vt)*0.0833);}
+      if(elig&&sal_cal_days>0){proratedMW=Math.round((mw/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
     }else if(elig&&sal_cal_days>0&&mw>0){proratedMW=Math.round((mw/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
     rows.push({emp_id:eid,emp_name:c_nm>=0?String(row[c_nm]||'').trim():'',doj,month_year:monthYear,designation:desig,skill,location:loc,division,area,basic_th:bt,vda_th:vt,fixed_basic_da:bt+vt,app_govt,theoretical:bt+vt,min_wages:mw,sal_cal_days,pay_days,prorated_mw:proratedMW,eligible:elig,bonus});
   }
@@ -749,14 +759,18 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelec
       </table>
       <p style="font-size:11px;color:var(--ink-soft);margin-bottom:16px;">Uses Semi-Skilled B &amp; Skilled B (higher slab). Source: Haryana Labour Dept notification 04/04/2025.</p>
 
-      <p class="modal-section-title" style="color:#7C3AED;">Tamil Nadu State &mdash; Construction &amp; Maintenance (W.E.F. 01-10-2024) &mdash; Rule: Branch contains Chennai</p>
+      <p class="modal-section-title" style="color:#7C3AED;">Tamil Nadu State &mdash; Construction &amp; Maintenance &mdash; Rule: Branch contains Chennai</p>
       <table class="modal-tbl">
         <thead><tr><th>Period</th><th>Unskilled</th><th>Semi-Skilled</th><th>Skilled</th><th>Highly Skilled</th></tr></thead>
         <tbody>
-          <tr><td style="font-weight:600;">Oct 2024 onwards</td><td>14,656.72</td><td>15,567.76</td><td>16,986.32</td><td>18,404.88</td></tr>
+          <tr><td style="font-weight:600;">Dec 2022 &ndash; Mar 2023</td><td>26,240.00</td><td>27,530.00</td><td>28,115.00</td><td>28,655.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2023 &ndash; Mar 2024</td><td>29,471.00</td><td>30,761.00</td><td>31,346.00</td><td>31,886.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2024 &ndash; Mar 2025</td><td>31,085.00</td><td>32,375.00</td><td>32,960.00</td><td>33,500.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2025 &ndash; Mar 2026</td><td>31,488.00</td><td>32,778.00</td><td>33,363.00</td><td>33,903.00</td></tr>
+          <tr><td style="font-weight:600;">Apr 2026 onwards</td><td>31,569.00</td><td>32,859.00</td><td>33,444.00</td><td>33,984.00</td></tr>
         </tbody>
       </table>
-      <p style="font-size:11px;color:var(--ink-soft);margin-bottom:16px;">Daily rates x 26 working days. Source: Tamil Nadu Labour Dept.</p>
+      <p style="font-size:11px;color:var(--ink-soft);margin-bottom:16px;">Chennai, Tuticorin &amp; Coimbatore A Zone. Basic Rate/Day constant since 07/12/2022 (Unskilled &#8377;560, Semi-Skilled &#8377;603, Skilled &#8377;622.50, Highly Skilled &#8377;640.50); DA/day revised periodically. Monthly Gross = (Basic+DA) &times; 30 days. Source: Tamil Nadu Labour Dept. official wage sheet.</p>
 
       <p class="modal-section-title" style="color:var(--blue);">Central Govt CLC &mdash; Construction &amp; Maintenance &mdash; All other employees (Monthly = Daily x 26)</p>
       <table class="modal-tbl">
