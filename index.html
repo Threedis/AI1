@@ -401,7 +401,12 @@ const MW_TAMILNADU=[
                     C:{UNSKILLED:27789,SEMISKI:31989,SKILLED:32229,HIGHSKI:33114}}]
 ];
 
-function isHaryanaEmp(id){return (id||'').toUpperCase().substring(0,2)==='HO';}
+function isHaryanaEmp(id,branch,division){
+  const b=(branch||'').toLowerCase().trim();
+  const d=(division||'').toLowerCase().trim();
+  if(b.includes('pbb itc')&&d.includes('36 pbb itc'))return true;
+  return (id||'').toUpperCase().substring(0,2)==='HO';
+}
 function getTNZone(branch){
   const l=(branch||'').toLowerCase();
   if(l.includes('chennai')||l.includes('tuticorin')||l.includes('coimbatore'))return 'A';
@@ -410,11 +415,11 @@ function getTNZone(branch){
   return null;
 }
 
-function getMW(area,skill,monthYear,empId,branch){
+function getMW(area,skill,monthYear,empId,branch,division){
   if(!monthYear)return 0;
   const p=monthYear.split('-'),MN={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
   const mo=MN[p[0]],yr=parseInt(p[1]);if(!mo||!yr)return 0;
-  if(isHaryanaEmp(empId)){
+  if(isHaryanaEmp(empId,branch,division)){
     const k=normSkillH(skill);
     for(const[fm,fy,tm,ty,t]of MW_HARYANA){if(yr*12+mo>=fy*12+fm&&yr*12+mo<=ty*12+tm)return t[k]||0;}
     return MW_HARYANA[MW_HARYANA.length-1][4][normSkillH(skill)]||0;
@@ -438,11 +443,17 @@ const AREA_B=['amritsar','aurangabad','bhopal','bhubaneshwar','bhubneshwar','cal
 function getArea(loc){const l=(loc||'').toLowerCase().trim();if(AREA_A.some(a=>l.includes(a)))return 'A';if(AREA_B.some(b=>l.includes(b)))return 'B';return 'C';}
 
 /* SKILL MAP */
-const SKILL_MAP={'OPERATOR-BHS':'Skilled','SITE INCHARGE':'Highly Skilled','JUNIOR TECHNICIAN':'Semi-Skilled','TECHNICIAN-O&M':'Skilled','JR. TECHNICIAN -O&M':'Semi-Skilled','TECHNICIAN':'Skilled','HELPER':'Unskilled','TECHNICIAN CUM DRIVER':'Skilled','DRIVER/ATTENDANT':'Semi-Skilled','ATTENDANT/HELPER':'Semi-Skilled','ATTENDANT':'Semi-Skilled','SUPERVISOR':'Highly Skilled','ENGINEER':'Highly Skilled','SR. TECHNICIAN-O&M':'Highly Skilled','TECH ELECTRICAL':'Skilled'};
-function getSkill(desig){
-  const d=(desig||'').toUpperCase().trim();
-  if(SKILL_MAP[d])return SKILL_MAP[d];
-  for(const[k,v]of Object.entries(SKILL_MAP)){if(d===k||d.includes(k)||k.includes(d))return v;}
+const SKILL_MAP={'OPERATOR-BHS':'Skilled','SITE INCHARGE':'Highly Skilled','JUNIOR TECHNICIAN':'Semi-Skilled','TECHNICIAN-O&M':'Skilled','JR. TECHNICIAN -O&M':'Semi-Skilled','TECHNICIAN':'Skilled','HELPER':'Unskilled','TECHNICIAN CUM DRIVER':'Skilled','DRIVER/ATTENDANT':'Semi-Skilled','ATTENDANT/HELPER':'Semi-Skilled','ATTENDANT':'Semi-Skilled','SUPERVISOR':'Highly Skilled','ENGINEER':'Highly Skilled','SR. TECHNICIAN-O&M':'Highly Skilled','TECH ELECTRICAL':'Skilled','SUPPORT STAFF':'Unskilled','TECH MECHANICAL':'Skilled'};
+function normDesig(s){return (s||'').toUpperCase().trim().replace(/-/g,' ').replace(/\s+/g,' ');}
+const NORM_SKILL_MAP={};
+for(const[k,v]of Object.entries(SKILL_MAP)){NORM_SKILL_MAP[normDesig(k)]=v;}
+function getSkill(desig,division){
+  const dRaw=(desig||'').toUpperCase().trim();
+  const d=normDesig(desig);
+  const isASFT=(division||'').toUpperCase().includes('ASFT');
+  if(isASFT&&(dRaw==='DRIVER/ATTENDANT'||dRaw==='ATTENDANT'))return 'Unskilled';
+  if(NORM_SKILL_MAP[d])return NORM_SKILL_MAP[d];
+  for(const[k,v]of Object.entries(NORM_SKILL_MAP)){if(d===k||d.includes(k)||k.includes(d))return v;}
   const dl=d.toLowerCase();
   if(dl.includes('supervisor')||dl.includes('incharge')||dl.includes('engineer')||dl.includes('manager'))return 'Highly Skilled';
   if(dl.includes('technician')||dl.includes('operator'))return 'Skilled';
@@ -583,14 +594,18 @@ function parseRows(raw,filename){
     const pay_days=Number.isFinite(pay_days_raw)?pay_days_raw:sal_cal_days;
     let doj='';
     if(c_doj>=0&&row[c_doj]!=null){const dv=row[c_doj];if(dv instanceof Date){doj=`${String(dv.getDate()).padStart(2,'0')}/${String(dv.getMonth()+1).padStart(2,'0')}/${dv.getFullYear()}`;}else{doj=String(dv).trim();}}
-    const skill=getSkill(desig);
+    const skill=getSkill(desig,division);
     const area=getArea(loc);
-    const isCappedProj=/\bt3\b[\s\S]*\bbhs\b|\bt1\b[\s\S]*\bbhs\b|gems/i.test(division);
-    const isFtiOnly=!isCappedProj&&/fti/i.test(division);
+    const isCappedProj=/\bt3\b[\s\S]*\bbhs\b|\bt1\b[\s\S]*\bbhs\b|gems|gmes/i.test(division);
+    const isPbbChandigarh=/pbb\s*chandigarh/i.test(loc)||/pbb\s*chandigarh/i.test(division);
+    const isFtiOnly=!isCappedProj&&(/fti/i.test(division)||isPbbChandigarh);
     const isSpecialDiv=isCappedProj||isFtiOnly;
-    const mw=isSpecialDiv?(bt+vt):getMW(area,skill,monthYear,eid,loc);
-    const elig=isCappedProj?true:(bt+vt>0&&bt+vt<21000);
-    const app_govt=isCappedProj?'N/A':isFtiOnly?'N/A':isHaryanaEmp(eid)?'Haryana State':getTNZone(loc)?'Tamil Nadu State':'Central Govt';
+    const isPbbItc=(loc||'').toLowerCase().includes('pbb itc')&&(division||'').toLowerCase().includes('36 pbb itc');
+    const isVijaywadaHO=(loc||'').toLowerCase().includes('vijaywada')&&(division||'').toLowerCase().includes('bhs itc vijayawada')&&(eid||'').toUpperCase().substring(0,2)==='HO';
+    const isHaryanaOverrideGroup=isPbbItc||isVijaywadaHO;
+    const mw=isSpecialDiv?(bt+vt):getMW(area,skill,monthYear,eid,loc,division);
+    const elig=isCappedProj?true:isHaryanaOverrideGroup?(mw>0&&mw<21000):(bt+vt>0&&bt+vt<21000);
+    const app_govt=isCappedProj?'N/A':isFtiOnly?'N/A':isHaryanaEmp(eid,loc,division)?'Haryana State':getTNZone(loc)?'Tamil Nadu State':'Central Govt';
     let proratedMW=0,bonus=0;
     if(isCappedProj){
       const earnedWage=Math.min(bt+vt,21000);
@@ -753,8 +768,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelec
         <div class="skill-row"><span class="skill-desig">Sr. Technician-O&amp;M</span><span class="skill-badge sk-hs">Highly Skilled</span></div>
         <div class="skill-row"><span class="skill-desig">Supervisor</span><span class="skill-badge sk-hs">Highly Skilled</span></div>
         <div class="skill-row"><span class="skill-desig">Tech Electrical</span><span class="skill-badge sk-sk">Skilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Support Staff</span><span class="skill-badge sk-un">Unskilled</span></div>
+        <div class="skill-row"><span class="skill-desig">Tech Mechanical</span><span class="skill-badge sk-sk">Skilled</span></div>
       </div>
       <p style="font-size:11px;color:var(--ink-soft);margin-top:8px;">Fallback: "Technician" variants = Skilled &middot; "Helper" = Unskilled &middot; "Supervisor/Engineer/Incharge" = Highly Skilled &middot; others = Semi-Skilled</p>
+      <p style="font-size:11px;color:var(--ink-soft);margin-top:4px;">Note: hyphen/space variants are treated as the same designation (e.g. "Tech Electrical" = "Tech-Electrical"; "Tech Mechanical" = "Tech-Mechanical").</p>
+      <p style="font-size:11px;color:var(--ink-soft);margin-top:4px;">Exception: if Division = "ASFT", Driver/Attendant and Attendant are classified as Unskilled (instead of Semi-Skilled).</p>
     </div>
   </div>
 </div>
