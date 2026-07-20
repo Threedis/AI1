@@ -596,22 +596,22 @@ function parseRows(raw,filename){
     if(c_doj>=0&&row[c_doj]!=null){const dv=row[c_doj];if(dv instanceof Date){doj=`${String(dv.getDate()).padStart(2,'0')}/${String(dv.getMonth()+1).padStart(2,'0')}/${dv.getFullYear()}`;}else{doj=String(dv).trim();}}
     const skill=getSkill(desig,division);
     const area=getArea(loc);
-    const isCappedProj=/\bt3\b[\s\S]*\bbhs\b|\bt1\b[\s\S]*\bbhs\b|gems|gmes/i.test(division);
     const isPbbChandigarh=/pbb\s*chandigarh/i.test(loc)||/pbb\s*chandigarh/i.test(division);
-    const isFtiOnly=!isCappedProj&&(/fti/i.test(division)||isPbbChandigarh);
-    const isSpecialDiv=isCappedProj||isFtiOnly;
+    const isCappedProj=!isPbbChandigarh&&/\bt3\b[\s\S]*\bbhs\b|\bt1\b[\s\S]*\bbhs\b|gems|gmes|fti/i.test(division);
+    const isSpecialDiv=isCappedProj||isPbbChandigarh;
     const isPbbItc=(loc||'').toLowerCase().includes('pbb itc')&&(division||'').toLowerCase().includes('36 pbb itc');
     const isVijaywadaHO=(loc||'').toLowerCase().includes('vijaywada')&&(division||'').toLowerCase().includes('bhs itc vijayawada')&&(eid||'').toUpperCase().substring(0,2)==='HO';
     const isHaryanaOverrideGroup=isPbbItc||isVijaywadaHO;
     const mw=isSpecialDiv?(bt+vt):getMW(area,skill,monthYear,eid,loc,division);
-    const elig=isCappedProj?true:isHaryanaOverrideGroup?(mw>0&&mw<21000):(bt+vt>0&&bt+vt<21000);
-    const app_govt=isCappedProj?'N/A':isFtiOnly?'N/A':isHaryanaEmp(eid,loc,division)?'Haryana State':getTNZone(loc)?'Tamil Nadu State':'Central Govt';
+    const elig=isSpecialDiv?true:isHaryanaOverrideGroup?(mw>0&&mw<21000):(bt+vt>0&&bt+vt<21000);
+    const app_govt=isSpecialDiv?'N/A':isHaryanaEmp(eid,loc,division)?'Haryana State':getTNZone(loc)?'Tamil Nadu State':'Central Govt';
     let proratedMW=0,bonus=0;
     if(isCappedProj){
       const earnedWage=Math.min(bt+vt,21000);
       if(sal_cal_days>0){proratedMW=Math.round((earnedWage/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
-    }else if(isFtiOnly){
-      if(elig&&sal_cal_days>0){proratedMW=Math.round((mw/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
+    }else if(isPbbChandigarh){
+      const earnedWage=bt+vt;
+      if(sal_cal_days>0){proratedMW=Math.round((earnedWage/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
     }else if(elig&&sal_cal_days>0&&mw>0){proratedMW=Math.round((mw/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
     rows.push({emp_id:eid,emp_name:c_nm>=0?String(row[c_nm]||'').trim():'',doj,month_year:monthYear,designation:desig,skill,location:loc,division,area,basic_th:bt,vda_th:vt,fixed_basic_da:bt+vt,app_govt,theoretical:bt+vt,min_wages:mw,sal_cal_days,pay_days,prorated_mw:proratedMW,eligible:elig,bonus});
   }
