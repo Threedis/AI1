@@ -613,8 +613,9 @@ function parseRows(raw,filename){
     const skill=isEtdEvd?'Highly Skilled':getSkill(desig,division);
     const area=isEtdEvd?'B':getArea(loc);
     const isPbbChandigarh=/pbb\s*chandigarh/i.test(loc)||/pbb\s*chandigarh/i.test(division);
-    const isCappedProj=!isEtdEvd&&!isPbbChandigarh&&/\bt3\b[\s\S]*\bbhs\b|\bt1\b[\s\S]*\bbhs\b|gems|gmes|fti/i.test(division);
-    const isSpecialDiv=isCappedProj||isPbbChandigarh;
+    const isFtiOnly=!isEtdEvd&&!isPbbChandigarh&&/fti/i.test(division);
+    const isCappedProj=!isEtdEvd&&!isPbbChandigarh&&!isFtiOnly&&/\bt3\b[\s\S]*\bbhs\b|\bt1\b[\s\S]*\bbhs\b|gems|gmes/i.test(division);
+    const isSpecialDiv=isCappedProj||isPbbChandigarh||isFtiOnly;
     const isPbbItc=(loc||'').toLowerCase().includes('pbb itc')&&(division||'').toLowerCase().includes('36 pbb itc');
     const isVijaywadaHO=(loc||'').toLowerCase().includes('vijaywada')&&(division||'').toLowerCase().includes('bhs itc vijayawada')&&(eid||'').toUpperCase().substring(0,2)==='HO';
     const isHaryanaOverrideGroup=isPbbItc||isVijaywadaHO;
@@ -623,7 +624,7 @@ function parseRows(raw,filename){
     else if(isEtdEvd)mw=getHaryanaHighSkillMW(monthYear);
     else if(isSpecialDiv)mw=bt+vt;
     else mw=getMW(area,skill,monthYear,eid,loc,division);
-    const elig=isEtdFixed?true:isEtdEvd?(bt+vt>0&&bt+vt<21000):isSpecialDiv?true:isHaryanaOverrideGroup?(mw>0&&mw<21000):(bt+vt>0&&bt+vt<21000);
+    const elig=isEtdFixed?true:isEtdEvd?(bt+vt>0&&bt+vt<21000):isFtiOnly?(bt+vt<=21000):isSpecialDiv?true:isHaryanaOverrideGroup?(mw>0&&mw<21000):(bt+vt>0&&bt+vt<21000);
     const app_govt=isEtdFixed?'ON BASIC':isEtdEvd?'Haryana State':isSpecialDiv?'N/A':isHaryanaEmp(eid,loc,division)?'Haryana State':getTNZone(loc)?'Tamil Nadu State':'Central Govt';
     let proratedMW=0,bonus=0;
     if(isEtdEvd){
@@ -637,6 +638,8 @@ function parseRows(raw,filename){
     }else if(isPbbChandigarh){
       const earnedWage=bt+vt;
       if(sal_cal_days>0){proratedMW=Math.round((earnedWage/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
+    }else if(isFtiOnly){
+      if(elig&&sal_cal_days>0){proratedMW=Math.round(((bt+vt)/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
     }else if(elig&&sal_cal_days>0&&mw>0){proratedMW=Math.round((mw/sal_cal_days)*pay_days);bonus=Math.round(proratedMW*0.0833);}
     const earnBasic=sal_cal_days>0?Math.round((bt/sal_cal_days)*pay_days):0;
     const earnVda=sal_cal_days>0?Math.round((vt/sal_cal_days)*pay_days):0;
